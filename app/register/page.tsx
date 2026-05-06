@@ -1,13 +1,15 @@
+'use client'
+
+import { useActionState } from 'react'
+import { registerSenior } from '@/app/actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 
-export const metadata = {
-  title: '프로필 등록 — 상상우리',
-}
-
 export default function RegisterPage() {
+  const [state, action, pending] = useActionState(registerSenior, null)
+
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <h1 className="text-3xl font-bold">시니어 프로필 등록</h1>
@@ -15,13 +17,24 @@ export default function RegisterPage() {
         아래 정보를 입력하시면 맞춤 일자리를 자동으로 추천해 드립니다.
       </p>
 
+      {state && (
+        <div
+          className={`rounded-lg p-4 text-lg font-medium ${
+            state.success
+              ? 'bg-green-50 text-green-700'
+              : 'bg-red-50 text-red-700'
+          }`}
+        >
+          {state.message}
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">기본 정보</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* 기능 구현은 다음 블록에서 */}
-          <form className="space-y-6">
+          <form action={action} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-lg font-medium">
                 이름
@@ -31,7 +44,7 @@ export default function RegisterPage() {
                 name="name"
                 placeholder="홍길동"
                 className="h-12 text-lg"
-                disabled
+                required
               />
             </div>
 
@@ -44,7 +57,7 @@ export default function RegisterPage() {
                 name="region"
                 placeholder="예) 서울 강남구"
                 className="h-12 text-lg"
-                disabled
+                required
               />
             </div>
 
@@ -57,7 +70,7 @@ export default function RegisterPage() {
                 name="desired_job"
                 placeholder="예) 경비, 청소, 행정 보조"
                 className="h-12 text-lg"
-                disabled
+                required
               />
             </div>
 
@@ -72,7 +85,6 @@ export default function RegisterPage() {
                 min={0}
                 placeholder="0"
                 className="h-12 text-lg"
-                disabled
               />
             </div>
 
@@ -80,9 +92,9 @@ export default function RegisterPage() {
               type="submit"
               size="lg"
               className="h-14 w-full text-xl font-bold"
-              disabled
+              disabled={pending}
             >
-              등록하기 (준비 중)
+              {pending ? '등록 중...' : '등록하기'}
             </Button>
           </form>
         </CardContent>
