@@ -1,0 +1,92 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+
+export const metadata = {
+  title: '프로필 등록 — 상상우리',
+}
+
+export default function RegisterPage() {
+  return (
+    <div className="mx-auto max-w-xl space-y-6">
+      <h1 className="text-3xl font-bold">시니어 프로필 등록</h1>
+      <p className="text-lg text-gray-600">
+        아래 정보를 입력하시면 맞춤 일자리를 자동으로 추천해 드립니다.
+      </p>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">기본 정보</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* 기능 구현은 다음 블록에서 */}
+          <form className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-lg font-medium">
+                이름
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="홍길동"
+                className="h-12 text-lg"
+                disabled
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="region" className="text-lg font-medium">
+                지역
+              </Label>
+              <Input
+                id="region"
+                name="region"
+                placeholder="예) 서울 강남구"
+                className="h-12 text-lg"
+                disabled
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="desired_job" className="text-lg font-medium">
+                희망 직종
+              </Label>
+              <Input
+                id="desired_job"
+                name="desired_job"
+                placeholder="예) 경비, 청소, 행정 보조"
+                className="h-12 text-lg"
+                disabled
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="career_years" className="text-lg font-medium">
+                경력 (년)
+              </Label>
+              <Input
+                id="career_years"
+                name="career_years"
+                type="number"
+                min={0}
+                placeholder="0"
+                className="h-12 text-lg"
+                disabled
+              />
+            </div>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="h-14 w-full text-xl font-bold"
+              disabled
+            >
+              등록하기 (준비 중)
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
