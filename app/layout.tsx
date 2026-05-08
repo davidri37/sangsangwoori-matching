@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className={`${geist.variable} h-full antialiased`}>
+    <html lang="ko" className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col bg-gray-50 text-gray-900">
         <Navbar />
         <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
