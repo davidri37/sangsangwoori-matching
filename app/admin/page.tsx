@@ -1,15 +1,17 @@
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import JobForm from './JobForm'
 
 export const metadata = {
   title: '담당자 대시보드 — 상상우리',
 }
 
 export default async function AdminPage() {
-  const [{ data: allSeniors }, { data: matchRows }] = await Promise.all([
+  const [{ data: allSeniors }, { data: matchRows }, { count: jobCount }] = await Promise.all([
     supabase.from('seniors').select('id, name, region, desired_job, career_years').order('created_at', { ascending: false }),
     supabase.from('matches').select('senior_id, score, seniors(name), jobs(title, region)').order('score', { ascending: false }),
+    supabase.from('jobs').select('*', { count: 'exact', head: true }),
   ])
 
   const matchedSeniorIds = new Set((matchRows ?? []).map((m: any) => m.senior_id))
@@ -22,12 +24,36 @@ export default async function AdminPage() {
   }
   const pending = [...bestBySenior.values()]
 
+  const stats = [
+    { label: '전체 시니어', value: allSeniors?.length ?? 0, unit: '명' },
+    { label: '등록 공고', value: jobCount ?? 0, unit: '건' },
+    { label: '매칭 완료', value: pending.length, unit: '명' },
+    { label: '미매칭', value: unmatched.length, unit: '명' },
+  ]
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">담당자 대시보드</h1>
       <p className="text-lg text-gray-600">
-        시니어 매칭 현황을 단계별로 확인하고 배정 상태를 관리합니다.
+        공고를 등록하고 시니어 매칭 현황을 확인합니다.
       </p>
+
+      {/* 집계 카드 */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {stats.map(({ label, value, unit }) => (
+          <Card key={label}>
+            <CardContent className="pt-6 text-center">
+              <p className="text-4xl font-bold text-blue-600">
+                {value}
+                <span className="ml-1 text-2xl font-normal text-gray-500">{unit}</span>
+              </p>
+              <p className="mt-1 text-base text-gray-600">{label}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <JobForm />
 
       {/* 미매칭 */}
       <Card>

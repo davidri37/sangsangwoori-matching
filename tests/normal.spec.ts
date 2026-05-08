@@ -51,6 +51,6 @@ test.describe('정상 시나리오: 시니어 등록 → 자동 매칭', () => {
     const matchingTable = page.locator('table').nth(1)
     const matchRow = matchingTable.locator('tr').filter({ hasText: SENIOR_NAME })
     await expect(matchRow).toBeVisible()
-    await expect(matchRow).toContainText('100점')
+    await expect(matchRow).toContainText('6점')
   })
 })

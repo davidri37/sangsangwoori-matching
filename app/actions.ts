@@ -45,7 +45,7 @@ export async function registerSenior(
     return { success: false, message: '저장에 실패했습니다. 다시 시도해 주세요.' }
   }
 
-  await runMatching(senior.id, region, desired_job, career_years)
+  await matchSeniorToJobs(senior.id, region, desired_job, career_years)
 
   revalidatePath('/recommendations')
   revalidatePath('/admin')
@@ -53,7 +53,39 @@ export async function registerSenior(
   return { success: true, message: `${name} 님의 프로필이 등록되었습니다!` }
 }
 
-async function runMatching(
+export async function registerJob(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const title = (formData.get('title') as string)?.trim()
+  const region = (formData.get('region') as string)?.trim()
+  const job_type = (formData.get('job_type') as string)?.trim()
+  const required_career = parseInt((formData.get('required_career') as string) ?? '0', 10)
+
+  if (!title || !region || !job_type) {
+    return { success: false, message: '공고 제목, 지역, 직종은 필수 항목입니다.' }
+  }
+
+  const { data: job, error } = await supabase
+    .from('jobs')
+    .insert({ title, region, job_type, required_career: isNaN(required_career) ? 0 : required_career })
+    .select('id')
+    .single()
+
+  if (error || !job) {
+    return { success: false, message: '저장에 실패했습니다. 다시 시도해 주세요.' }
+  }
+
+  await matchJobToSeniors(job.id, region, job_type, required_career)
+
+  revalidatePath('/recommendations')
+  revalidatePath('/admin')
+
+  return { success: true, message: `"${title}" 공고가 등록되었습니다!` }
+}
+
+// 시니어 1명 → 전체 공고 매칭
+async function matchSeniorToJobs(
   seniorId: string,
   region: string,
   desired_job: string,
@@ -70,10 +102,40 @@ async function runMatching(
       const jobRegion = nr(job.region)
       const jobType = nj(job.job_type)
       let score = 0
-      if (jobRegion === normRegion) score += 50
-      if (normJob.includes(jobType) || jobType.includes(normJob)) score += 30
-      if ((career_years || 0) >= job.required_career) score += 20
+      if (jobRegion === normRegion) score += 3
+      if (normJob.includes(jobType) || jobType.includes(normJob)) score += 2
+      if ((career_years || 0) >= job.required_career) score += 1
       return { senior_id: seniorId, job_id: job.id, score }
+    })
+    .filter((r) => r.score > 0)
+
+  if (rows.length > 0) {
+    await supabase.from('matches').insert(rows)
+  }
+}
+
+// 공고 1건 → 전체 시니어 매칭
+async function matchJobToSeniors(
+  jobId: string,
+  region: string,
+  job_type: string,
+  required_career: number,
+) {
+  const { data: seniors } = await supabase.from('seniors').select('*')
+  if (!seniors || seniors.length === 0) return
+
+  const normJobRegion = nr(region)
+  const normJobType = nj(job_type)
+
+  const rows = seniors
+    .map((senior) => {
+      const seniorRegion = nr(senior.region)
+      const seniorJob = nj(senior.desired_job)
+      let score = 0
+      if (seniorRegion === normJobRegion) score += 3
+      if (seniorJob.includes(normJobType) || normJobType.includes(seniorJob)) score += 2
+      if ((senior.career_years || 0) >= required_career) score += 1
+      return { senior_id: senior.id, job_id: jobId, score }
     })
     .filter((r) => r.score > 0)
 
