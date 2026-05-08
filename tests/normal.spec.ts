@@ -35,8 +35,10 @@ test.describe('정상 시나리오: 시니어 등록 → 자동 매칭', () => {
     // --- 폼 제출 ---
     await page.goto('/register')
     await page.fill('#name', SENIOR_NAME)
-    await page.fill('#region', '서울')
-    await page.fill('#desired_job', '경비')
+    await page.locator('[data-slot="select-trigger"]').first().click()
+    await page.getByRole('option', { name: '서울' }).click()
+    await page.locator('[data-slot="select-trigger"]').nth(1).click()
+    await page.getByRole('option', { name: '경비' }).click()
     await page.fill('#career_years', '5')
     await page.click('button[type="submit"]')
 
@@ -46,9 +48,9 @@ test.describe('정상 시나리오: 시니어 등록 → 자동 매칭', () => {
     await expect(successBox).toContainText('등록되었습니다')
 
     // --- 담당자 대시보드 검증 ---
-    // /admin 페이지 첫 번째 테이블: 미매칭, 두 번째 테이블: 매칭 대기
+    // /admin 페이지 테이블 순서: 0=일자리목록, 1=미매칭, 2=매칭대기
     await page.goto('/admin')
-    const matchingTable = page.locator('table').nth(1)
+    const matchingTable = page.locator('table').nth(2)
     const matchRow = matchingTable.locator('tr').filter({ hasText: SENIOR_NAME })
     await expect(matchRow).toBeVisible()
     await expect(matchRow).toContainText('6점')

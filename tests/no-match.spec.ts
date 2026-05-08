@@ -45,8 +45,10 @@ test.describe('엣지 시나리오: 조건 불일치로 매칭 없음', () => {
     // --- 서울/경비/3년 시니어 등록 ---
     await page.goto('/register')
     await page.fill('#name', SENIOR_NAME)
-    await page.fill('#region', '서울')
-    await page.fill('#desired_job', '경비')
+    await page.locator('[data-slot="select-trigger"]').first().click()
+    await page.getByRole('option', { name: '서울' }).click()
+    await page.locator('[data-slot="select-trigger"]').nth(1).click()
+    await page.getByRole('option', { name: '경비' }).click()
     await page.fill('#career_years', '3')
     await page.click('button[type="submit"]')
 

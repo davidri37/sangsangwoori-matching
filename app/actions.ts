@@ -3,7 +3,11 @@
 import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 
-type ActionState = { success: boolean; message: string } | null
+type ActionState = {
+  success: boolean
+  message: string
+  fieldErrors?: Record<string, string>
+} | null
 
 // 비교용 정규화 테이블 — 원본 데이터는 절대 수정하지 않음
 const REGION_NORM: Record<string, string> = {
@@ -31,8 +35,12 @@ export async function registerSenior(
   const desired_job = (formData.get('desired_job') as string)?.trim()
   const career_years = parseInt((formData.get('career_years') as string) ?? '0', 10)
 
-  if (!name || !region || !desired_job) {
-    return { success: false, message: '이름, 지역, 희망 직종은 필수 항목입니다.' }
+  const fieldErrors: Record<string, string> = {}
+  if (!name) fieldErrors.name = '이름을 입력해 주세요.'
+  if (!region) fieldErrors.region = '지역을 선택해 주세요.'
+  if (!desired_job) fieldErrors.desired_job = '희망 직종을 선택해 주세요.'
+  if (Object.keys(fieldErrors).length > 0) {
+    return { success: false, message: '필수 항목을 확인해 주세요.', fieldErrors }
   }
 
   const { data: senior, error } = await supabase
@@ -82,6 +90,13 @@ export async function registerJob(
   revalidatePath('/admin')
 
   return { success: true, message: `"${title}" 공고가 등록되었습니다!` }
+}
+
+export async function deleteJob(jobId: string): Promise<void> {
+  await supabase.from('matches').delete().eq('job_id', jobId)
+  await supabase.from('jobs').delete().eq('id', jobId)
+  revalidatePath('/admin')
+  revalidatePath('/recommendations')
 }
 
 // 시니어 1명 → 전체 공고 매칭

@@ -6,9 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const REGIONS = ['서울', '경기', '인천', '기타']
+const JOB_TYPES = ['경비', '청소', '조리', '돌봄', '기타']
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null
+  return (
+    <p className="rounded bg-red-50 px-3 py-2 text-base font-medium text-red-700">
+      {message}
+    </p>
+  )
+}
 
 export default function RegisterPage() {
   const [state, action, pending] = useActionState(registerSenior, null)
+  const errors = state?.fieldErrors ?? {}
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -17,14 +37,14 @@ export default function RegisterPage() {
         아래 정보를 입력하시면 맞춤 일자리를 자동으로 추천해 드립니다.
       </p>
 
-      {state && (
-        <div
-          className={`rounded-lg p-4 text-lg font-medium ${
-            state.success
-              ? 'bg-green-50 text-green-700'
-              : 'bg-red-50 text-red-700'
-          }`}
-        >
+      {state?.success && (
+        <div className="rounded-lg bg-green-50 p-4 text-lg font-medium text-green-700">
+          {state.message}
+        </div>
+      )}
+
+      {state && !state.success && !state.fieldErrors && (
+        <div className="rounded-lg bg-red-50 p-4 text-lg font-medium text-red-700">
           {state.message}
         </div>
       )}
@@ -35,45 +55,61 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <form action={action} className="space-y-6">
+            {/* 이름 */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-lg font-medium">
-                이름
+                이름 <span className="text-red-500">*</span>
               </Label>
+              <FieldError message={errors.name} />
               <Input
                 id="name"
                 name="name"
                 placeholder="홍길동"
                 className="h-12 text-lg"
-                required
               />
             </div>
 
+            {/* 지역 */}
             <div className="space-y-2">
-              <Label htmlFor="region" className="text-lg font-medium">
-                지역
+              <Label className="text-lg font-medium">
+                지역 <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="region"
-                name="region"
-                placeholder="예) 서울 강남구"
-                className="h-12 text-lg"
-                required
-              />
+              <FieldError message={errors.region} />
+              <Select name="region">
+                <SelectTrigger className="h-12 text-lg">
+                  <SelectValue placeholder="지역을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REGIONS.map((r) => (
+                    <SelectItem key={r} value={r} className="text-lg">
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
+            {/* 희망 직종 */}
             <div className="space-y-2">
-              <Label htmlFor="desired_job" className="text-lg font-medium">
-                희망 직종
+              <Label className="text-lg font-medium">
+                희망 직종 <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="desired_job"
-                name="desired_job"
-                placeholder="예) 경비, 청소, 행정 보조"
-                className="h-12 text-lg"
-                required
-              />
+              <FieldError message={errors.desired_job} />
+              <Select name="desired_job">
+                <SelectTrigger className="h-12 text-lg">
+                  <SelectValue placeholder="직종을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {JOB_TYPES.map((j) => (
+                    <SelectItem key={j} value={j} className="text-lg">
+                      {j}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
+            {/* 경력 */}
             <div className="space-y-2">
               <Label htmlFor="career_years" className="text-lg font-medium">
                 경력 (년)

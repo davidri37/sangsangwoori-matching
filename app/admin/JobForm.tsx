@@ -6,12 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const REGIONS = ['서울', '경기', '인천', '기타']
+const JOB_TYPES = ['경비', '청소', '조리', '돌봄', '기타']
 
 export default function JobForm() {
   const [state, action, pending] = useActionState(registerJob, null)
 
   return (
-    <div className="mx-auto max-w-xl space-y-4">
+    <div className="space-y-4">
       {state && (
         <div
           className={`rounded-lg p-4 text-lg font-medium ${
@@ -30,7 +40,7 @@ export default function JobForm() {
           <form action={action} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="title" className="text-lg font-medium">
-                공고 제목
+                공고 제목 <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="title"
@@ -42,29 +52,39 @@ export default function JobForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="region" className="text-lg font-medium">
-                지역
+              <Label className="text-lg font-medium">
+                지역 <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="region"
-                name="region"
-                placeholder="예) 서울"
-                className="h-12 text-lg"
-                required
-              />
+              <Select name="region">
+                <SelectTrigger className="h-12 text-lg">
+                  <SelectValue placeholder="지역 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REGIONS.map((r) => (
+                    <SelectItem key={r} value={r} className="text-lg">
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="job_type" className="text-lg font-medium">
-                직종
+              <Label className="text-lg font-medium">
+                직종 <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="job_type"
-                name="job_type"
-                placeholder="예) 경비, 청소, 조리"
-                className="h-12 text-lg"
-                required
-              />
+              <Select name="job_type">
+                <SelectTrigger className="h-12 text-lg">
+                  <SelectValue placeholder="직종 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {JOB_TYPES.map((j) => (
+                    <SelectItem key={j} value={j} className="text-lg">
+                      {j}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

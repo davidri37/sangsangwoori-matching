@@ -1,17 +1,19 @@
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import JobForm from './JobForm'
+import { deleteJob } from '@/app/actions'
 
 export const metadata = {
   title: '담당자 대시보드 — 상상우리',
 }
 
 export default async function AdminPage() {
-  const [{ data: allSeniors }, { data: matchRows }, { count: jobCount }] = await Promise.all([
+  const [{ data: allSeniors }, { data: matchRows }, { data: allJobs }] = await Promise.all([
     supabase.from('seniors').select('id, name, region, desired_job, career_years').order('created_at', { ascending: false }),
     supabase.from('matches').select('senior_id, score, seniors(name), jobs(title, region)').order('score', { ascending: false }),
-    supabase.from('jobs').select('*', { count: 'exact', head: true }),
+    supabase.from('jobs').select('id, title, region, job_type, required_career').order('created_at', { ascending: false }),
   ])
 
   const matchedSeniorIds = new Set((matchRows ?? []).map((m: any) => m.senior_id))
@@ -26,7 +28,7 @@ export default async function AdminPage() {
 
   const stats = [
     { label: '전체 시니어', value: allSeniors?.length ?? 0, unit: '명' },
-    { label: '등록 공고', value: jobCount ?? 0, unit: '건' },
+    { label: '등록 공고', value: allJobs?.length ?? 0, unit: '건' },
     { label: '매칭 완료', value: pending.length, unit: '명' },
     { label: '미매칭', value: unmatched.length, unit: '명' },
   ]
@@ -53,7 +55,67 @@ export default async function AdminPage() {
         ))}
       </div>
 
-      <JobForm />
+      {/* 일자리 관리 */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">일자리 관리</h2>
+        <JobForm />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">
+              등록된 일자리{' '}
+              <span className="text-base font-normal text-gray-500">
+                ({allJobs?.length ?? 0}건)
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-lg">
+                <thead>
+                  <tr className="border-b bg-gray-50 text-left">
+                    {['공고명', '지역', '직종', '요구 경력', ''].map((col) => (
+                      <th key={col} className="px-4 py-3 font-semibold text-gray-700">
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {!allJobs || allJobs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                        등록된 일자리가 없습니다.
+                      </td>
+                    </tr>
+                  ) : (
+                    allJobs.map((job: any) => (
+                      <tr key={job.id} className="border-b last:border-0 hover:bg-gray-50">
+                        <td className="px-4 py-3">{job.title}</td>
+                        <td className="px-4 py-3">{job.region}</td>
+                        <td className="px-4 py-3">{job.job_type}</td>
+                        <td className="px-4 py-3">{job.required_career}년</td>
+                        <td className="px-4 py-3">
+                          <form action={deleteJob.bind(null, job.id)}>
+                            <Button
+                              type="submit"
+                              variant="destructive"
+                              size="sm"
+                              className="text-base"
+                            >
+                              삭제
+                            </Button>
+                          </form>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* 미매칭 */}
       <Card>
