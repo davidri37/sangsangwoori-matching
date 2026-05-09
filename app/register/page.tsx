@@ -32,14 +32,14 @@ export default function RegisterPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <h1 className="text-3xl font-bold">시니어 프로필 등록</h1>
+      <h1 className="text-3xl font-bold">시니어 일자리 신청하기</h1>
       <p className="text-lg text-gray-600">
         아래 정보를 입력하시면 맞춤 일자리를 자동으로 추천해 드립니다.
       </p>
 
       {state?.success && (
         <div className="rounded-lg bg-green-50 p-4 text-lg font-medium text-green-700">
-          {state.message}
+          등록이 완료되었습니다. 담당자가 곧 연락드립니다
         </div>
       )}
 
@@ -60,6 +60,7 @@ export default function RegisterPage() {
               <Label htmlFor="name" className="text-lg font-medium">
                 이름 <span className="text-red-500">*</span>
               </Label>
+              <p className="text-gray-600 mt-1">신청하시는 분의 이름을 입력해 주세요.</p>
               <FieldError message={errors.name} />
               <Input
                 id="name"
@@ -74,6 +75,7 @@ export default function RegisterPage() {
               <Label className="text-lg font-medium">
                 지역 <span className="text-red-500">*</span>
               </Label>
+              <p className="text-gray-600 mt-1">어디에서 일하고 싶으세요?</p>
               <FieldError message={errors.region} />
               <Select name="region">
                 <SelectTrigger className="h-12 text-lg">
@@ -94,6 +96,7 @@ export default function RegisterPage() {
               <Label className="text-lg font-medium">
                 희망 직종 <span className="text-red-500">*</span>
               </Label>
+              <p className="text-gray-600 mt-1">어떤 일을 하시겠어요?</p>
               <FieldError message={errors.desired_job} />
               <Select name="desired_job">
                 <SelectTrigger className="h-12 text-lg">
@@ -114,6 +117,7 @@ export default function RegisterPage() {
               <Label htmlFor="career_years" className="text-lg font-medium">
                 경력 (년)
               </Label>
+              <p className="text-gray-600 mt-1">관련 일을 해보신 적이 있다면 몇 년 정도 되셨나요?</p>
               <Input
                 id="career_years"
                 name="career_years"

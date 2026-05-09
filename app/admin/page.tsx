@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import JobForm from './JobForm'
 import { deleteJob } from '@/app/actions'
+import { AlertTriangle, Clock, CheckCircle, Users } from 'lucide-react'
+import Link from 'next/link'
 
 export const metadata = {
   title: '담당자 대시보드 — 상상우리',
@@ -27,10 +29,10 @@ export default async function AdminPage() {
   const pending = [...bestBySenior.values()]
 
   const stats = [
-    { label: '전체 시니어', value: allSeniors?.length ?? 0, unit: '명' },
-    { label: '등록 공고', value: allJobs?.length ?? 0, unit: '건' },
-    { label: '매칭 완료', value: pending.length, unit: '명' },
-    { label: '미매칭', value: unmatched.length, unit: '명' },
+    { label: '미매칭', value: unmatched.length, unit: '명', icon: <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-500" /> },
+    { label: '매칭 대기', value: pending.length, unit: '명', icon: <Clock className="mx-auto mb-2 h-8 w-8 text-yellow-500" /> },
+    { label: '배정 완료', value: 0, unit: '명', icon: <CheckCircle className="mx-auto mb-2 h-8 w-8 text-green-500" /> },
+    { label: '전체 시니어', value: allSeniors?.length ?? 0, unit: '명', icon: <Users className="mx-auto mb-2 h-8 w-8 text-blue-500" /> },
   ]
 
   return (
@@ -42,9 +44,10 @@ export default async function AdminPage() {
 
       {/* 집계 카드 */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {stats.map(({ label, value, unit }) => (
+        {stats.map(({ label, value, unit, icon }) => (
           <Card key={label}>
             <CardContent className="pt-6 text-center">
+              {icon}
               <p className="text-4xl font-bold text-blue-600">
                 {value}
                 <span className="ml-1 text-2xl font-normal text-gray-500">{unit}</span>
@@ -100,10 +103,9 @@ export default async function AdminPage() {
                             <Button
                               type="submit"
                               variant="destructive"
-                              size="sm"
-                              className="text-base"
+                              className="h-12 text-base"
                             >
-                              삭제
+                              삭제 확인
                             </Button>
                           </form>
                         </td>
@@ -130,7 +132,7 @@ export default async function AdminPage() {
             <table className="w-full text-lg">
               <thead>
                 <tr className="border-b bg-gray-50 text-left">
-                  {['시니어 이름', '지역', '희망 직종', '경력(년)'].map((col) => (
+                  {['시니어 이름', '지역', '희망 직종', '경력(년)', '상세'].map((col) => (
                     <th key={col} className="px-4 py-3 font-semibold text-gray-700">
                       {col}
                     </th>
@@ -151,6 +153,11 @@ export default async function AdminPage() {
                       <td className="px-4 py-3">{s.region}</td>
                       <td className="px-4 py-3">{s.desired_job}</td>
                       <td className="px-4 py-3">{s.career_years}년</td>
+                      <td className="px-4 py-3">
+                        <Link href={`/recommendations?senior_id=${s.id}`}>
+                          <Button variant="outline" className="h-12 text-base">상세 보기</Button>
+                        </Link>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -173,7 +180,7 @@ export default async function AdminPage() {
             <table className="w-full text-lg">
               <thead>
                 <tr className="border-b bg-gray-50 text-left">
-                  {['시니어 이름', '추천 일자리', '매칭 점수', '일자리 지역'].map((col) => (
+                  {['시니어 이름', '추천 일자리', '매칭 점수', '일자리 지역', '상세'].map((col) => (
                     <th key={col} className="px-4 py-3 font-semibold text-gray-700">
                       {col}
                     </th>
@@ -194,6 +201,11 @@ export default async function AdminPage() {
                       <td className="px-4 py-3">{m.jobs?.title ?? '-'}</td>
                       <td className="px-4 py-3 font-semibold text-blue-600">{m.score}점</td>
                       <td className="px-4 py-3">{m.jobs?.region ?? '-'}</td>
+                      <td className="px-4 py-3">
+                        <Link href={`/recommendations?senior_id=${m.senior_id}`}>
+                          <Button variant="outline" className="h-12 text-base">상세 보기</Button>
+                        </Link>
+                      </td>
                     </tr>
                   ))
                 )}
