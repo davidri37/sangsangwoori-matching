@@ -45,7 +45,7 @@ test.describe('정상 시나리오: 시니어 등록 → 자동 매칭', () => {
     // 초록 성공 박스 노출
     const successBox = page.locator('.bg-green-50')
     await expect(successBox).toBeVisible()
-    await expect(successBox).toContainText('등록되었습니다')
+    await expect(successBox).toContainText('등록이 완료되었습니다')
 
     // --- 담당자 대시보드 검증 ---
     // /admin 페이지 테이블 순서: 0=일자리목록, 1=미매칭, 2=매칭대기

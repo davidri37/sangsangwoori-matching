@@ -99,6 +99,12 @@ export async function deleteJob(jobId: string): Promise<void> {
   revalidatePath('/recommendations')
 }
 
+export async function updateMatchStatus(matchId: string, status: string): Promise<void> {
+  await supabase.from('matches').update({ status }).eq('id', matchId)
+  revalidatePath('/admin')
+  revalidatePath('/recommendations')
+}
+
 // 시니어 1명 → 전체 공고 매칭
 async function matchSeniorToJobs(
   seniorId: string,

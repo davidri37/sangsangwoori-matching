@@ -55,7 +55,7 @@ test.describe('엣지 시나리오: 조건 불일치로 매칭 없음', () => {
     // 등록 성공 메시지 확인
     const successBox = page.locator('.bg-green-50')
     await expect(successBox).toBeVisible()
-    await expect(successBox).toContainText('등록되었습니다')
+    await expect(successBox).toContainText('등록이 완료되었습니다')
 
     // --- 핵심 검증: E2E 공고(부산/청소/10년)와의 매칭이 0건 ---
     // 공유 DB의 실제 공고는 일부 매칭이 될 수 있으나,

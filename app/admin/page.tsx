@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import JobForm from './JobForm'
-import { deleteJob } from '@/app/actions'
+import { deleteJob, updateMatchStatus } from '@/app/actions'
 import { AlertTriangle, Clock, CheckCircle, Users } from 'lucide-react'
 import Link from 'next/link'
 
@@ -14,24 +14,39 @@ export const metadata = {
 export default async function AdminPage() {
   const [{ data: allSeniors }, { data: matchRows }, { data: allJobs }] = await Promise.all([
     supabase.from('seniors').select('id, name, region, desired_job, career_years').order('created_at', { ascending: false }),
-    supabase.from('matches').select('senior_id, score, seniors(name), jobs(title, region)').order('score', { ascending: false }),
+    supabase.from('matches').select('id, senior_id, score, status, seniors(name), jobs(title, region)').order('score', { ascending: false }),
     supabase.from('jobs').select('id, title, region, job_type, required_career').order('created_at', { ascending: false }),
   ])
 
-  const matchedSeniorIds = new Set((matchRows ?? []).map((m: any) => m.senior_id))
-  const unmatched = (allSeniors ?? []).filter((s) => !matchedSeniorIds.has(s.id))
+  // Split matches by status
+  const completedMatchRows = (matchRows ?? []).filter((m: any) => m.status === 'completed')
+  const pendingMatchRows = (matchRows ?? []).filter((m: any) => m.status !== 'completed')
 
-  // Best match per senior (rows already sorted by score desc)
-  const bestBySenior = new Map<string, any>()
-  for (const m of matchRows ?? []) {
-    if (!bestBySenior.has(m.senior_id)) bestBySenior.set(m.senior_id, m)
+  // Get completed seniors
+  const completedBySenior = new Map<string, any>()
+  for (const m of completedMatchRows) {
+    if (!completedBySenior.has(m.senior_id)) completedBySenior.set(m.senior_id, m)
   }
-  const pending = [...bestBySenior.values()]
+  const completed = [...completedBySenior.values()]
+  const completedSeniorIds = new Set(completed.map(m => m.senior_id))
+
+  // Get pending seniors (excluding completed)
+  const pendingBySenior = new Map<string, any>()
+  for (const m of pendingMatchRows) {
+    if (!completedSeniorIds.has(m.senior_id) && !pendingBySenior.has(m.senior_id)) {
+      pendingBySenior.set(m.senior_id, m)
+    }
+  }
+  const pending = [...pendingBySenior.values()]
+  const pendingSeniorIds = new Set(pending.map(m => m.senior_id))
+
+  // Get unmatched seniors (excluding completed and pending)
+  const unmatched = (allSeniors ?? []).filter((s) => !completedSeniorIds.has(s.id) && !pendingSeniorIds.has(s.id))
 
   const stats = [
     { label: '미매칭', value: unmatched.length, unit: '명', icon: <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-500" /> },
     { label: '매칭 대기', value: pending.length, unit: '명', icon: <Clock className="mx-auto mb-2 h-8 w-8 text-yellow-500" /> },
-    { label: '배정 완료', value: 0, unit: '명', icon: <CheckCircle className="mx-auto mb-2 h-8 w-8 text-green-500" /> },
+    { label: '배정 완료', value: completed.length, unit: '명', icon: <CheckCircle className="mx-auto mb-2 h-8 w-8 text-green-500" /> },
     { label: '전체 시니어', value: allSeniors?.length ?? 0, unit: '명', icon: <Users className="mx-auto mb-2 h-8 w-8 text-blue-500" /> },
   ]
 
@@ -142,7 +157,7 @@ export default async function AdminPage() {
               <tbody>
                 {unmatched.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
                       미매칭 시니어가 없습니다.
                     </td>
                   </tr>
@@ -180,7 +195,7 @@ export default async function AdminPage() {
             <table className="w-full text-lg">
               <thead>
                 <tr className="border-b bg-gray-50 text-left">
-                  {['시니어 이름', '추천 일자리', '매칭 점수', '일자리 지역', '상세'].map((col) => (
+                  {['시니어 이름', '추천 일자리', '매칭 점수', '일자리 지역', '액션'].map((col) => (
                     <th key={col} className="px-4 py-3 font-semibold text-gray-700">
                       {col}
                     </th>
@@ -190,21 +205,74 @@ export default async function AdminPage() {
               <tbody>
                 {pending.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
                       매칭 대기 중인 항목이 없습니다.
                     </td>
                   </tr>
                 ) : (
                   pending.map((m: any) => (
-                    <tr key={m.senior_id} className="border-b last:border-0 hover:bg-gray-50">
+                    <tr key={m.id} className="border-b last:border-0 hover:bg-gray-50">
                       <td className="px-4 py-3">{m.seniors?.name ?? '-'}</td>
                       <td className="px-4 py-3">{m.jobs?.title ?? '-'}</td>
                       <td className="px-4 py-3 font-semibold text-blue-600">{m.score}점</td>
                       <td className="px-4 py-3">{m.jobs?.region ?? '-'}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 flex gap-2">
                         <Link href={`/recommendations?senior_id=${m.senior_id}`}>
                           <Button variant="outline" className="h-12 text-base">상세 보기</Button>
                         </Link>
+                        <form action={updateMatchStatus.bind(null, m.id, 'completed')}>
+                          <Button type="submit" className="h-12 text-base bg-blue-600 hover:bg-blue-700">배정 완료 처리</Button>
+                        </form>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 배정 완료 */}
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-3">
+          <CardTitle className="text-xl">배정 완료</CardTitle>
+          <Badge className="text-sm bg-green-500 hover:bg-green-600">
+            연결 성공 ({completed.length})
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-lg">
+              <thead>
+                <tr className="border-b bg-gray-50 text-left">
+                  {['시니어 이름', '연결 일자리', '일자리 지역', '액션'].map((col) => (
+                    <th key={col} className="px-4 py-3 font-semibold text-gray-700">
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {completed.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
+                      배정 완료된 시니어가 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  completed.map((m: any) => (
+                    <tr key={m.id} className="border-b last:border-0 hover:bg-gray-50">
+                      <td className="px-4 py-3">{m.seniors?.name ?? '-'}</td>
+                      <td className="px-4 py-3 font-medium">{m.jobs?.title ?? '-'}</td>
+                      <td className="px-4 py-3">{m.jobs?.region ?? '-'}</td>
+                      <td className="px-4 py-3 flex gap-2">
+                        <Link href={`/recommendations?senior_id=${m.senior_id}`}>
+                          <Button variant="outline" className="h-12 text-base">상세 보기</Button>
+                        </Link>
+                        <form action={updateMatchStatus.bind(null, m.id, 'pending')}>
+                          <Button variant="outline" type="submit" className="h-12 text-base text-gray-500">실행 취소</Button>
+                        </form>
                       </td>
                     </tr>
                   ))
