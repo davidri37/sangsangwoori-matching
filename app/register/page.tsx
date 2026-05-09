@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState } from 'react'
 import { registerSenior } from '@/app/actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -136,6 +137,19 @@ export default function RegisterPage() {
             >
               {pending ? '등록 중...' : '등록하기'}
             </Button>
+
+            {state?.success && state?.senior_id && (
+              <Link href={`/recommendations?senior_id=${state.senior_id}`} className="block mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="h-14 w-full text-xl font-bold border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
+                  맞춤 일자리 추천 확인하기
+                </Button>
+              </Link>
+            )}
           </form>
         </CardContent>
       </Card>

@@ -7,6 +7,7 @@ type ActionState = {
   success: boolean
   message: string
   fieldErrors?: Record<string, string>
+  senior_id?: string
 } | null
 
 // 비교용 정규화 테이블 — 원본 데이터는 절대 수정하지 않음
@@ -58,7 +59,7 @@ export async function registerSenior(
   revalidatePath('/recommendations')
   revalidatePath('/admin')
 
-  return { success: true, message: `${name} 님의 프로필이 등록되었습니다!` }
+  return { success: true, message: `${name} 님의 프로필이 등록되었습니다!`, senior_id: senior.id }
 }
 
 export async function registerJob(
