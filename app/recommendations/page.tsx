@@ -35,7 +35,8 @@ export default async function RecommendationsPage({
 
   let seniorName = ''
   if (senior_id && matches && matches.length > 0) {
-    seniorName = matches[0].seniors?.name
+    const seniorData = matches[0].seniors as any
+    seniorName = Array.isArray(seniorData) ? seniorData[0]?.name : seniorData?.name
   } else if (senior_id) {
     const { data: senior } = await supabase.from('seniors').select('name').eq('id', senior_id).single()
     seniorName = senior?.name || ''
